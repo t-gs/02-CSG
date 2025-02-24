@@ -1,4 +1,5 @@
 import { Color, Intersection, Ray, RTObject, Vec } from "./types";
+import { dot, mul } from "./util";
 
 export class Plane implements RTObject {
   constructor(public position: Vec, public normal: Vec, public color: Color) {}
@@ -18,17 +19,46 @@ export class Plane implements RTObject {
         ray.direction.z * this.normal.z);
 
     if (t < 0) {
-      return [];
+      if (dot(this.normal, ray.direction) < 0) {
+        return [
+          {
+            distance: 0,
+            normal: mul(ray.direction, -1),
+            color: this.color,
+            front: true,
+          },
+          {
+            distance: Infinity,
+            normal: ray.direction,
+            color: this.color,
+            front: false,
+          },
+        ];
+      } else {
+        return [];
+      }
     }
 
-    return [
-      { distance: t, normal: this.normal, color: this.color, front: true },
-      {
-        distance: Infinity,
-        normal: ray.direction,
-        color: this.color,
-        front: false,
-      },
-    ];
+    if (dot(this.normal, ray.direction) < 0) {
+      return [
+        { distance: t, normal: this.normal, color: this.color, front: true },
+        {
+          distance: Infinity,
+          normal: ray.direction,
+          color: this.color,
+          front: false,
+        },
+      ];
+    } else {
+      return [
+        {
+          distance: 0,
+          normal: mul(ray.direction, -1),
+          color: this.color,
+          front: true,
+        },
+        { distance: t, normal: this.normal, color: this.color, front: false },
+      ];
+    }
   }
 }
